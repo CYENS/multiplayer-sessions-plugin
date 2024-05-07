@@ -42,6 +42,7 @@ protected:
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 	void OnJoinSessionComplete(const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnStartSessionComplete(bool bWasSuccessful);
+	FString GetServerTravelSessionMapPath() const;
 	void OnDestroySessionComplete(bool bWasSuccessful);
 	
 	// menu setup functions
@@ -65,6 +66,9 @@ private:
 	
 	UFUNCTION()
 	void JoinButtonClicked();
+	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	void StartMultiplayerSession() const;
 	
 	void DisableJoinAndHostButtons();
 

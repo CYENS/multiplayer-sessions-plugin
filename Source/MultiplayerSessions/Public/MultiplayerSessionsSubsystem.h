@@ -13,7 +13,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogMultiplayerSessionsSubsystem, Log, All);
 /**
  * Declaring our own custom delegates for the Menu class to bind callbacks to.
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool bWasSuccessful);
@@ -39,8 +39,9 @@ public:
 	void FindSessions(const int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SearchResult);
 	void DestroySession();
-	bool StartSession();
-	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	bool StartSession(const TSoftObjectPtr<UWorld> SessionMap = nullptr);
+
 	/**
 	 * Our own custom delegates for the Menu class to bind callbacks to.
 	 */
@@ -73,6 +74,9 @@ protected:
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
 
+	TSoftObjectPtr<UWorld> SessionMapToTravel;
+	FString GetServerTravelSessionMapPath() const;
+	
 private:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;

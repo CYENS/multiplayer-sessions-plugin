@@ -37,6 +37,10 @@ void UMenu::MenuSetup(
 	{
 		UE_LOG(LogMultiplayerSessionsMenu, Error, TEXT("Menu: Could not set MultiplayerSessionsSubsystem"));
 	}
+	else
+	{
+		MultiplayerSessionsSubsystem;
+	}
 	
 	if(!TryBindCallbacksToMultiplayerSessionsSubsystem())
 	{
@@ -104,10 +108,10 @@ bool UMenu::TryBindCallbacksToMultiplayerSessionsSubsystem()
 		return false;
 	}
 	
-	MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSessionComplete);
+	MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddUObject(this, &ThisClass::OnCreateSessionComplete);
 	MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &ThisClass::OnFindSessionsComplete);
 	MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSessionComplete);
-	MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddUObject(this, &ThisClass::OnStartSessionComplete);
+	// MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddUObject(this, &ThisClass::OnStartSessionComplete);
 	MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddUObject(this, &ThisClass::OnDestroySessionComplete);
 	return true;
 }
@@ -146,6 +150,18 @@ void UMenu::JoinButtonClicked()
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->FindSessions(10000);
+	}
+}
+
+void UMenu::StartMultiplayerSession() const
+{
+	if (MultiplayerSessionsSubsystem)
+	{
+		MultiplayerSessionsSubsystem->StartSession();
+	}
+	else
+	{
+		UE_LOG(LogMultiplayerSessionsMenu, Error, TEXT("Menu: MultiplayerSessionsSubsystem is null"));
 	}
 }
 
@@ -311,6 +327,55 @@ void UMenu::OnJoinSessionComplete(const FName& SessionName, EOnJoinSessionComple
 
 void UMenu::OnStartSessionComplete(bool bWasSuccessful)
 {
+	if (!bWasSuccessful)
+	{
+		UE_LOG(LogMultiplayerSessionsMenu, Error, TEXT("Menu: Failed to start session"));
+		return;
+	}
+	UE_LOG(LogMultiplayerSessionsMenu, Log, TEXT("Menu: Session started successfully"));
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		UE_LOG(LogMultiplayerSessionsMenu, Error, TEXT("Menu: Failed to get World, cannot server travel to session map"));
+		return;
+	}
+	
+	const FString ServerTravelLobbyMapPath = GetServerTravelSessionMapPath();
+	UE_LOG(LogMultiplayerSessionsMenu, Log, TEXT("Menu: ServerTravelSessionMapPath set to: %s"), *ServerTravelLobbyMapPath);
+	
+	if (World->ServerTravel(ServerTravelLobbyMapPath))
+	{
+		UE_LOG(LogMultiplayerSessionsMenu, Log, TEXT("Menu: Listen Server Travelled to %s"), *ServerTravelLobbyMapPath);
+	}
+	else
+	{
+		UE_LOG(LogMultiplayerSessionsMenu, Error, TEXT("Menu: Listen Server Failed to travel to session map %s"), *ServerTravelLobbyMapPath);
+	}
+}
+
+FString UMenu::GetServerTravelSessionMapPath() const
+{
+	FString ServerTravelSessionMapPath;
+	if (!LobbyMapAsset.IsNull())
+	{
+		// CanonicalAssetPath is something like "/Game/ThirdPerson/Maps/LobbyMap.LobbyMap"
+		const FString CanonicalAssetPath = LobbyMapAsset.ToString();
+		// Remove the ".*" part and add "?listen" to the end
+		if (
+			const int32 DotPosition = CanonicalAssetPath.Find(".");
+			DotPosition != INDEX_NONE
+		)
+		{
+			ServerTravelSessionMapPath = CanonicalAssetPath.Left(DotPosition) + "?listen";
+		}
+	}
+	else
+	{
+		const FString DefaultSessionsMapPath { "/MultiplayerSessions/Maps/LVL_MainLevelMultiplayerSessionsDemo?listen" };
+		ServerTravelSessionMapPath = DefaultSessionsMapPath;
+	}
+	return ServerTravelSessionMapPath;
 }
 
 void UMenu::OnDestroySessionComplete(bool bWasSuccessful)
