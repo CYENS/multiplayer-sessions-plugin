@@ -40,7 +40,7 @@ public:
 	void JoinSession(const FOnlineSessionSearchResult& SearchResult);
 	void DestroySession();
 	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
-	bool StartSession(const TSoftObjectPtr<UWorld> SessionMap = nullptr);
+	bool StartSession();
 
 	/**
 	 * Our own custom delegates for the Menu class to bind callbacks to.
@@ -65,7 +65,7 @@ protected:
 	void OnFindSessionsComplete(bool bWasSuccessful);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
-	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful) const ;
 
 	bool IsSessionInterfaceInvalid() const;
 	bool TryAsyncCreateSession();
@@ -74,9 +74,6 @@ protected:
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
 
-	TSoftObjectPtr<UWorld> SessionMapToTravel;
-	FString GetServerTravelSessionMapPath() const;
-	
 private:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;

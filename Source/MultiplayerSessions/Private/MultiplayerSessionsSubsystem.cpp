@@ -154,29 +154,6 @@ void UMultiplayerSessionsSubsystem::SetupLastSessionSearchOptions(const int32 Ma
 	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 }
 
-FString UMultiplayerSessionsSubsystem::GetServerTravelSessionMapPath() const
-{
-	FString ServerTravelLobbyMapPath;
-	if (!SessionMapToTravel.IsNull())
-	{
-		// CanonicalAssetPath is something like "/Game/ThirdPerson/Maps/LobbyMap.LobbyMap"
-		const FString CanonicalAssetPath = SessionMapToTravel.ToString();
-		// Remove the ".*" part and add "?listen" to the end
-		if (
-			const int32 DotPosition = CanonicalAssetPath.Find(".");
-			DotPosition != INDEX_NONE
-		)
-		{
-			ServerTravelLobbyMapPath = CanonicalAssetPath.Left(DotPosition) + "?listen";
-		}
-	}
-	else
-	{
-		ServerTravelLobbyMapPath = "";
-	}
-	return ServerTravelLobbyMapPath;
-}
-
 void UMultiplayerSessionsSubsystem::FindSessions(const int32 MaxSearchResults)
 {
 	if (IsSessionInterfaceInvalid()) return;
@@ -258,10 +235,8 @@ void UMultiplayerSessionsSubsystem::DestroySession()
 	}
 }
 
-bool UMultiplayerSessionsSubsystem::StartSession(const TSoftObjectPtr<UWorld> SessionMap)
+bool UMultiplayerSessionsSubsystem::StartSession()
 {
-
-	SessionMapToTravel = SessionMap;
 	if (!SessionInterface.IsValid())
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("SessionInterface is not valid"));
@@ -304,11 +279,6 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	}
 
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
-
-	if (SessionMapToTravel)
-	{
-		
-	}
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 
@@ -368,7 +338,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 
 }
 
-void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
+void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful) const 
 {
 	if (bWasSuccessful)
 	{
@@ -379,15 +349,6 @@ void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bo
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to start session"));
 	}
 
-	if (const FString SessionMapPath = GetServerTravelSessionMapPath(); !SessionMapPath.IsEmpty())
-	{
-		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Listen Server will travel to %s"), *SessionMapPath);
-		if (UWorld* World = GetWorld())
-		{
-			World->ServerTravel(SessionMapPath);
-		}
-	}
-	
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
 
