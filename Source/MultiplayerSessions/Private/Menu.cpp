@@ -139,7 +139,7 @@ void UMenu::HostButtonClicked()
 	
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
+		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, NAME_GameSession);
 	}
 }
 

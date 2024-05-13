@@ -27,12 +27,12 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 	SessionInterface = Subsystem->GetSessionInterface();
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(const int32 NumPublicConnections, FString MatchType)
+void UMultiplayerSessionsSubsystem::CreateSession(const int32 NumPublicConnections, const FString MatchType, const FName SessionName = NAME_GameSession)
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
-	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType)) return;
+	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType, SessionName)) return;
 
-	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession();
+	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionName);
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to issue session creation"));
@@ -43,12 +43,12 @@ void UMultiplayerSessionsSubsystem::CreateSession(const int32 NumPublicConnectio
 /**
  * @return  True if a session was destroyed, false if no session was destroyed
  */
-bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections, FString MatchType)
+bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType, const FName SessionName)
 {
 	if (IsSessionInterfaceInvalid()) return false;
 	
 	if (
-		const FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		const FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(SessionName);
 		ExistingSession != nullptr
 	)
 	{
@@ -72,7 +72,7 @@ bool UMultiplayerSessionsSubsystem::IsSessionInterfaceInvalid() const
 	return false;
 }
 
-bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession()
+bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const FName SessionName = NAME_GameSession)
 {
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	
@@ -81,7 +81,7 @@ bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession()
 	bool bHasSuccessfullyIssuedAsyncCreateSession = false;
 	if (
 		const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-		SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings)
+		SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), SessionName, *LastSessionSettings)
 	)
 	{
 		bHasSuccessfullyIssuedAsyncCreateSession = true;
@@ -332,7 +332,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections, LastMatchType);
+		CreateSession(LastNumPublicConnections, LastMatchType, SessionName);
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 
