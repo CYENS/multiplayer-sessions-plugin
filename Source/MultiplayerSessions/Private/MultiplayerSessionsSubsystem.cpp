@@ -27,12 +27,17 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 	SessionInterface = Subsystem->GetSessionInterface();
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(const int32 NumPublicConnections, const FString MatchType, const FName SessionName = NAME_GameSession)
+void UMultiplayerSessionsSubsystem::CreateSession(
+	const int32 NumPublicConnections,
+	const FString MatchType,
+	const FName SessionName,
+	const TMap<FName, FString>& SessionSettings
+)
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
-	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType, SessionName)) return;
+	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType, NAME_GameSession)) return;
 
-	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionName);
+	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(NAME_GameSession, SessionSettings);
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to issue session creation"));
@@ -48,7 +53,7 @@ bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 N
 	if (IsSessionInterfaceInvalid()) return false;
 	
 	if (
-		const FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(SessionName);
+		const FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 		ExistingSession != nullptr
 	)
 	{
@@ -72,16 +77,16 @@ bool UMultiplayerSessionsSubsystem::IsSessionInterfaceInvalid() const
 	return false;
 }
 
-bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const FName SessionName = NAME_GameSession)
+bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const FName SessionName = NAME_GameSession, const TMap<FName, FString>& SessionSettings)
 {
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	
-	SetupLastSessionSettings();
+	SetupLastSessionSettings(SessionSettings);
 	
 	bool bHasSuccessfullyIssuedAsyncCreateSession = false;
 	if (
 		const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-		SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), SessionName, *LastSessionSettings)
+		SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings)
 	)
 	{
 		bHasSuccessfullyIssuedAsyncCreateSession = true;
@@ -93,7 +98,7 @@ bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const FName SessionNam
 	return bHasSuccessfullyIssuedAsyncCreateSession;
 }
 
-void UMultiplayerSessionsSubsystem::SetupLastSessionSettings()
+void UMultiplayerSessionsSubsystem::SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings)
 {
 	if (!LastSessionSettings.IsValid())
 	{
@@ -107,8 +112,12 @@ void UMultiplayerSessionsSubsystem::SetupLastSessionSettings()
 	LastSessionSettings->bShouldAdvertise = true;
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
-	LastSessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-	LastSessionSettings->Set(FName("SecretKey"), FString("PREMIERE"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	for (const auto& ExtraSessionSetting : ExtraSessionSettings)
+	{
+		const FName SettingName = ExtraSessionSetting.Key;
+		const FString SettingValue = ExtraSessionSetting.Value;
+		LastSessionSettings->Set(SettingName, SettingValue, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	}
 }
 
 
@@ -332,7 +341,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections, LastMatchType, SessionName);
+		CreateSession(LastNumPublicConnections, LastMatchType, SessionName, TMap<FName, FString> ());
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 
@@ -361,7 +370,7 @@ bool UMultiplayerSessionsSubsystem::GetResolvedConnectString(const FName& Sessio
 		return false;
 	}
 
-	return SessionInterface->GetResolvedConnectString(SessionName, ConnectInfo);
+	return SessionInterface->GetResolvedConnectString(NAME_GameSession, ConnectInfo);
 }
 
 bool UMultiplayerSessionsSubsystem::TryFirstLocalPlayerControllerClientTravel(const FString& Address)
@@ -380,7 +389,7 @@ bool UMultiplayerSessionsSubsystem::TryFirstLocalPlayerControllerClientTravel(co
 bool UMultiplayerSessionsSubsystem::TryFirstLocalPlayerControllerClientTravel(const FName& SessionName)
 {
 	FString Address;
-	if (GetResolvedConnectString(SessionName, Address))
+	if (GetResolvedConnectString(NAME_GameSession, Address))
 	{
 		return TryFirstLocalPlayerControllerClientTravel(Address);
 	}

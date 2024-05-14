@@ -37,7 +37,12 @@ void UMPSessionTravelWidget::MenuSetup(
 	}
 }
 
-void UMPSessionTravelWidget::CreateSession(const TSoftObjectPtr<UWorld> LobbyServerTravelMap, const FName SessionName, const FString MatchType) 
+void UMPSessionTravelWidget::CreateSession(
+	const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
+	const FName SessionName,
+	const TMap<FName, FString>& SessionSettings,
+	const FString MatchType
+	) 
 {
 	LobbyMapAsset = LobbyServerTravelMap;
 	if (MultiplayerSessionsSubsystem == nullptr)
@@ -45,7 +50,8 @@ void UMPSessionTravelWidget::CreateSession(const TSoftObjectPtr<UWorld> LobbySer
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Failed to issue CreateSession, MultiplayerSessionsSubsystem is null"));
 		return;
 	}
-	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, SessionName);
+	const FName ActualSessionName = SessionName.IsNone() ? NAME_GameSession : SessionName;
+	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, ActualSessionName, SessionSettings);
 }
 
 void UMPSessionTravelWidget::FindSessions(const int32 MaxSearchResults) const 
@@ -202,13 +208,15 @@ FString UMPSessionTravelWidget::GetServerTravelLobbyMapPath() const
 
 void UMPSessionTravelWidget::OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful)
 {
+	TArray<FBPSessionResult> BlueprintSearchResults {};
 	if (!bWasSuccessful)
 	{
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("FindSessions Was unsuccesful"));
+		OnSessionsFound(BlueprintSearchResults, bWasSuccessful);
 		return;
 	}
 	
-	TArray<FBPSessionResult> BlueprintSearchResults;
+	UE_LOG(LogMPSessionTravelWidget, Warning, TEXT("%d Sessions Found"), SearchResults.Num());
 	for (const FOnlineSessionSearchResult& SearchResult : SearchResults)
 	{
 		if (!SearchResult.IsValid())
@@ -227,20 +235,20 @@ void UMPSessionTravelWidget::OnFindSessionsComplete(const TArray<FOnlineSessionS
 		for (auto& Setting : SearchResult.Session.SessionSettings.Settings)
 		{
 			const FName SettingName = Setting.Key;
-			const FOnlineSessionSetting SettingValue = Setting.Value;
-			SessionSettings.Add(SettingName, SettingValue.ToString());
-			UE_LOG(LogMPSessionTravelWidget, Log, TEXT("SettingName %s SettingValue %s"), *SettingName.ToString(), *SettingValue.ToString());
+			FString SettingValue;
+			Setting.Value.Data.GetValue(SettingValue);
+			SessionSettings.Add(SettingName, SettingValue);
+			UE_LOG(LogMPSessionTravelWidget, Log, TEXT("SettingName %s SettingValue %s"), *SettingName.ToString(), *SettingValue);
 		}
 		
 		FBPSessionResult BPSearchResult;
 		BPSearchResult.Id = Id;
 		BPSearchResult.OwningUserName = Name;
 		BPSearchResult.SessionSettings = SessionSettings;
-		
-		
+		BPSearchResult.SearchResult = SearchResult;
 		BlueprintSearchResults.Add(BPSearchResult);
 	}
-	OnSessionsFound(BlueprintSearchResults);
+	OnSessionsFound(BlueprintSearchResults, bWasSuccessful);
 }
 
 void UMPSessionTravelWidget::OnJoinSessionComplete(const FName& SessionName, EOnJoinSessionCompleteResult::Type Result)

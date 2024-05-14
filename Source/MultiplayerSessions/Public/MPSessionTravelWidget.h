@@ -27,15 +27,21 @@ public:
 	TSoftObjectPtr<UWorld> LobbyMapAsset;
 	TSoftObjectPtr<UWorld> SessionMapAsset;
 	
-	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
-	void CreateSession(const TSoftObjectPtr<UWorld> LobbyServerTravelMap, const FName SessionName, const FString MatchType = "");
+	UFUNCTION(BlueprintCallable, Category="Multiplayer Sessions")
+	void CreateSession(
+		const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
+		const FName SessionName,
+		const TMap<FName, FString>& SessionSettings,
+		const FString MatchType
+	);
+
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
 	void FindSessions(const int32 MaxSearchResults = 1000) const;
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
 	void JoinSession(const FBPSessionResult& SearchResult);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Multiplayer Sessions")
-	void OnSessionsFound(const TArray<FBPSessionResult>& SearchResults);
+	void OnSessionsFound(const TArray<FBPSessionResult>& SearchResults, const bool bWasSuccessful);
 
 protected:
 	virtual void NativeDestruct() override;

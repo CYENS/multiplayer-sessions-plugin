@@ -34,12 +34,15 @@ public:
 	 * To handle session functionality
 	 * The Menu class will call these.
 	 */
-	UFUNCTION(BlueprintCallable)
-	void CreateSession(const int32 NumPublicConnections, FString MatchType, const FName SessionName);
+	void CreateSession(
+		const int32 NumPublicConnections,
+		const FString MatchType,
+		const FName SessionName,
+		const TMap<FName, FString>& SessionSettings = TMap<FName, FString> ()
+	);
 	void FindSessions(const int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SearchResult);
 	void DestroySession();
-	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
 	bool StartSession();
 
 	/**
@@ -68,8 +71,8 @@ protected:
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful) const ;
 
 	bool IsSessionInterfaceInvalid() const;
-	bool TryAsyncCreateSession(const FName SessionName);
-	void SetupLastSessionSettings();
+	bool TryAsyncCreateSession(const FName SessionName, const TMap<FName, FString>& SessionSettings = TMap<FName, FString>());
+	void SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings);
 	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType, const FName SessionName);
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
