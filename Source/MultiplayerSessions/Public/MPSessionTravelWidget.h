@@ -28,9 +28,9 @@ public:
 	TSoftObjectPtr<UWorld> SessionMapAsset;
 	
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
-	void CreateSession(const TSoftObjectPtr<UWorld> LobbyServerTravelMap, const FName SessionName, const FString MatchType);
+	void CreateSession(const TSoftObjectPtr<UWorld> LobbyServerTravelMap, const FName SessionName, const FString MatchType = "");
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
-	void FindSessions(const int32 MaxSearchResults) const;
+	void FindSessions(const int32 MaxSearchResults = 1000) const;
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")
 	void JoinSession(const FBPSessionResult& SearchResult);
 	
