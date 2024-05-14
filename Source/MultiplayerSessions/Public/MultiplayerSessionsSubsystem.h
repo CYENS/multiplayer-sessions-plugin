@@ -36,7 +36,6 @@ public:
 	 */
 	void CreateSession(
 		const int32 NumPublicConnections,
-		const FString MatchType,
 		const TMap<FName, FString>& SessionSettings = TMap<FName, FString> ()
 	);
 	void FindSessions(const int32 MaxSearchResults);
@@ -72,7 +71,7 @@ protected:
 	bool IsSessionInterfaceInvalid() const;
 	bool TryAsyncCreateSession(const TMap<FName, FString>& SessionSettings = TMap<FName, FString>());
 	void SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings);
-	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType);
+	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections);
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
 
@@ -98,5 +97,4 @@ private:
 
 	bool bCreateSessionOnDestroy { false };
 	int32 LastNumPublicConnections { 4 };
-	FString LastMatchType { "FreeForAll" };
 };

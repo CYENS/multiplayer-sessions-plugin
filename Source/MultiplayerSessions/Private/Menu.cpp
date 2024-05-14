@@ -139,7 +139,7 @@ void UMenu::HostButtonClicked()
 	
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, TMap<FName, FString> ());
+		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, TMap<FName, FString> ());
 	}
 }
 

@@ -29,12 +29,11 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 
 void UMultiplayerSessionsSubsystem::CreateSession(
 	const int32 NumPublicConnections,
-	const FString MatchType,
 	const TMap<FName, FString>& SessionSettings
 )
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
-	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType)) return;
+	if (DestroyPreviousSessionIfExists(NumPublicConnections)) return;
 
 	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionSettings);
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
@@ -47,7 +46,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 /**
  * @return  True if a session was destroyed, false if no session was destroyed
  */
-bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType)
+bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections)
 {
 	if (IsSessionInterfaceInvalid()) return false;
 	
@@ -59,7 +58,6 @@ bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 N
 		UE_LOG(LogMultiplayerSessionsSubsystem, Warning, TEXT("Session already exists"));
 		bCreateSessionOnDestroy = true;
 		LastNumPublicConnections = NumPublicConnections;
-		LastMatchType = MatchType;
 		DestroySession();
 		return true;
 	}
@@ -347,7 +345,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections, LastMatchType,TMap<FName, FString> ());
+		CreateSession(LastNumPublicConnections);
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
