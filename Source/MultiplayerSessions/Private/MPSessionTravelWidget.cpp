@@ -39,9 +39,8 @@ void UMPSessionTravelWidget::MenuSetup(
 
 void UMPSessionTravelWidget::CreateSession(
 	const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
-	const FName SessionName,
-	const TMap<FName, FString>& SessionSettings,
-	const FString MatchType
+	const FString MatchType,
+	const TMap<FName, FString>& SessionSettings
 	) 
 {
 	LobbyMapAsset = LobbyServerTravelMap;
@@ -50,8 +49,7 @@ void UMPSessionTravelWidget::CreateSession(
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Failed to issue CreateSession, MultiplayerSessionsSubsystem is null"));
 		return;
 	}
-	const FName ActualSessionName = SessionName.IsNone() ? NAME_GameSession : SessionName;
-	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, ActualSessionName, SessionSettings);
+	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, SessionSettings);
 }
 
 void UMPSessionTravelWidget::FindSessions(const int32 MaxSearchResults) const 

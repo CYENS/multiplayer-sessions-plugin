@@ -30,9 +30,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Multiplayer Sessions")
 	void CreateSession(
 		const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
-		const FName SessionName,
-		const TMap<FName, FString>& SessionSettings,
-		const FString MatchType
+		const FString MatchType,
+		const TMap<FName, FString>& SessionSettings
 	);
 
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")

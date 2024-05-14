@@ -30,14 +30,13 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 void UMultiplayerSessionsSubsystem::CreateSession(
 	const int32 NumPublicConnections,
 	const FString MatchType,
-	const FName SessionName,
 	const TMap<FName, FString>& SessionSettings
 )
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
-	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType, NAME_GameSession)) return;
+	if (DestroyPreviousSessionIfExists(NumPublicConnections, MatchType)) return;
 
-	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(NAME_GameSession, SessionSettings);
+	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionSettings);
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to issue session creation"));
@@ -48,7 +47,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 /**
  * @return  True if a session was destroyed, false if no session was destroyed
  */
-bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType, const FName SessionName)
+bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections, const FString MatchType)
 {
 	if (IsSessionInterfaceInvalid()) return false;
 	
@@ -77,7 +76,7 @@ bool UMultiplayerSessionsSubsystem::IsSessionInterfaceInvalid() const
 	return false;
 }
 
-bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const FName SessionName = NAME_GameSession, const TMap<FName, FString>& SessionSettings)
+bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const TMap<FName, FString>& SessionSettings)
 {
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	
@@ -331,6 +330,13 @@ void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOn
 
 void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
+	if (!bWasSuccessful)
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to Destroy Session %s"), *SessionName.ToString());
+		return;
+	}
+	UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Successfuly destroyed Session %s"), *SessionName.ToString());
+	
 	if (!SessionInterface.IsValid())
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("SessionInterface is not valid"));
@@ -341,10 +347,9 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections, LastMatchType, SessionName, TMap<FName, FString> ());
+		CreateSession(LastNumPublicConnections, LastMatchType,TMap<FName, FString> ());
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
-
 }
 
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful) const 
