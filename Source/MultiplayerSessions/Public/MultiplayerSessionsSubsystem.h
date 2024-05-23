@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/OnlineIdentityInterface.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "queue"
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
@@ -13,15 +15,14 @@ DECLARE_LOG_CATEGORY_EXTERN(LogMultiplayerSessionsSubsystem, Log, All);
 /**
  * Declaring our own custom delegates for the Menu class to bind callbacks to.
  */
+DECLARE_MULTICAST_DELEGATE_FourParams(FMultiplayerOnLoginComplete, int LocalUserNum, bool bWasSuccseful, const FUniqueNetId& UserId, const FString& Error);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool bWasSuccessful);
+DECLARE_DELEGATE(FPendingLoginAction) // Used to delegate function calls to be executed after login. Used for find, create, and joint session if user is not already Logged in
 
-/**
- * 
- */
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
@@ -29,6 +30,7 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 
 public:
 	UMultiplayerSessionsSubsystem();
+	bool TryAsyncLogin(const FPendingLoginAction& PendingLoginAction);
 
 	/**
 	 * To handle session functionality
@@ -46,6 +48,7 @@ public:
 	/**
 	 * Our own custom delegates for the Menu class to bind callbacks to.
 	 */
+	FMultiplayerOnLoginComplete MultiplayerOnLoginComplete;
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
@@ -62,6 +65,8 @@ public:
 protected:
 	// Internal callbacks we'll bind to the Online Session Interface delegates
 	// These don't need to be called outside of this class.
+	
+	void OnLoginComplete(const int LocalUserNum, const bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
@@ -69,6 +74,7 @@ protected:
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful) const ;
 
 	bool IsSessionInterfaceInvalid() const;
+	bool IsIdentityInterfaceInvalid() const;
 	bool TryAsyncCreateSession(const TMap<FName, FString>& SessionSettings = TMap<FName, FString>());
 	void SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings);
 	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections);
@@ -77,6 +83,7 @@ protected:
 
 private:
 	IOnlineSessionPtr SessionInterface;
+	IOnlineIdentityPtr IdentityInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
@@ -84,6 +91,8 @@ private:
 	 * To add to the Online Session Interface delegate list.
 	 * We'll bind the MultiplayerSessionsSubsystem internal callback functions to these delegates.
 	 */
+	FOnLoginCompleteDelegate LoginCompleteDelegate;
+	FDelegateHandle LoginCompleteDelegateHandle;
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
@@ -97,4 +106,9 @@ private:
 
 	bool bCreateSessionOnDestroy { false };
 	int32 LastNumPublicConnections { 4 };
+	bool IsLoggedIn;
+	
+private:
+	std::queue<FPendingLoginAction> PendingLoginActionsQueue;
+	void ExecutePendingLoginActions();
 };
