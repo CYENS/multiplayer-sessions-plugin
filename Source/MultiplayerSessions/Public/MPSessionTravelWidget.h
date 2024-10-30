@@ -7,6 +7,7 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MPSessionTravelWidget.generated.h"
 
+struct FMPSessionSettings;
 DECLARE_LOG_CATEGORY_EXTERN(LogMPSessionTravelWidget, Log, All);
 
 class UMultiplayerSessionsSubsystem;
@@ -30,7 +31,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Multiplayer Sessions")
 	void CreateSession(
 		const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
-		const TMap<FName, FString>& SessionSettings
+		const FMPSessionSettings& SessionSettings,
+		const TMap<FName, FString>& ExtraSessionSettings
 	);
 
 	UFUNCTION(BlueprintCallable, Category="Μultiplayer Sessions")

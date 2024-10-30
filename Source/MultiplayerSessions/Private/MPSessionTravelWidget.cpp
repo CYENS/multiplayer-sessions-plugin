@@ -6,6 +6,7 @@
 #include "BlueprintSessionResult.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "MPSessionSettings.h"
 
 DEFINE_LOG_CATEGORY(LogMPSessionTravelWidget);
 
@@ -39,7 +40,8 @@ void UMPSessionTravelWidget::MenuSetup(
 
 void UMPSessionTravelWidget::CreateSession(
 	const TSoftObjectPtr<UWorld> LobbyServerTravelMap,
-	const TMap<FName, FString>& SessionSettings
+	const FMPSessionSettings& SessionSettings,
+	const TMap<FName, FString>& ExtraSessionSettings
 	) 
 {
 	LobbyMapAsset = LobbyServerTravelMap;
@@ -48,7 +50,7 @@ void UMPSessionTravelWidget::CreateSession(
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Failed to issue CreateSession, MultiplayerSessionsSubsystem is null"));
 		return;
 	}
-	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, SessionSettings);
+	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, SessionSettings, ExtraSessionSettings);
 }
 
 void UMPSessionTravelWidget::FindSessions(const int32 MaxSearchResults) const 

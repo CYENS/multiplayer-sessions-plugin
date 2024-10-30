@@ -9,6 +9,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
 #include "GameFramework/PlayerController.h"
+#include "MPSessionSettings.h"
 
 DEFINE_LOG_CATEGORY(LogMultiplayerSessionsMenu);
 
@@ -139,7 +140,7 @@ void UMenu::HostButtonClicked()
 	
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, TMap<FName, FString> ());
+		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, FMPSessionSettings (), TMap<FName, FString> ());
 	}
 }
 

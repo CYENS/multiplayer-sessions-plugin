@@ -10,6 +10,7 @@
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+struct FMPSessionSettings;
 DECLARE_LOG_CATEGORY_EXTERN(LogMultiplayerSessionsSubsystem, Log, All);
 
 /**
@@ -38,7 +39,8 @@ public:
 	 */
 	void CreateSession(
 		const int32 NumPublicConnections,
-		const TMap<FName, FString>& SessionSettings = TMap<FName, FString> ()
+		const FMPSessionSettings& SessionSettings,
+		const TMap<FName, FString>& ExtraSessionSettings = TMap<FName, FString> ()
 	);
 	void FindSessions(const int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SearchResult);
@@ -75,8 +77,14 @@ protected:
 
 	bool IsSessionInterfaceInvalid() const;
 	bool IsIdentityInterfaceInvalid() const;
-	bool TryAsyncCreateSession(const TMap<FName, FString>& SessionSettings = TMap<FName, FString>());
-	void SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings);
+	bool TryAsyncCreateSession(
+		const FMPSessionSettings& SessionSettings,
+		const TMap<FName, FString>& ExtraSessionSettings = TMap<FName, FString>()
+	);
+	void SetupLastSessionSettings(
+		const FMPSessionSettings& SessionSettings,
+		const TMap<FName, FString>& ExtraSessionSettings
+	);
 	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections);
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);

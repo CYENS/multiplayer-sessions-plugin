@@ -3,6 +3,7 @@
 
 #include "MultiplayerSessionsSubsystem.h"
 
+#include "MPSessionSettings.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
 #include "OnlineSessionSettings.h"
@@ -123,7 +124,8 @@ bool UMultiplayerSessionsSubsystem::TryAsyncLogin(const FPendingLoginAction& Pen
 
 void UMultiplayerSessionsSubsystem::CreateSession(
 	const int32 NumPublicConnections,
-	const TMap<FName, FString>& SessionSettings
+	const FMPSessionSettings& SessionSettings,
+	const TMap<FName, FString>& ExtraSessionSettings
 )
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
@@ -133,9 +135,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("User not logged in. Attempting to log in."));
 		const bool bHasIssuedAsyncLogin =  
 			TryAsyncLogin(FPendingLoginAction::CreateLambda(
-				[this, NumPublicConnections, SessionSettings]()
+				[this, NumPublicConnections, SessionSettings, ExtraSessionSettings]()
 					{
-					CreateSession(NumPublicConnections, SessionSettings);
+					CreateSession(NumPublicConnections, SessionSettings, ExtraSessionSettings);
 					}
 				)
 			);
@@ -155,7 +157,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 		}
 	}
 
-	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionSettings);
+	const bool bHasSuccessfullyIssuedAsyncCreateSession = TryAsyncCreateSession(SessionSettings, ExtraSessionSettings);
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("CreateSession failed to issue"));
@@ -207,11 +209,14 @@ bool UMultiplayerSessionsSubsystem::IsIdentityInterfaceInvalid() const
 	return false;
 }
 
-bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const TMap<FName, FString>& SessionSettings)
+bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(
+	const FMPSessionSettings& SessionSettings,
+	const TMap<FName, FString>& ExtraSessionSettings
+)
 {
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	
-	SetupLastSessionSettings(SessionSettings);
+	SetupLastSessionSettings(SessionSettings, ExtraSessionSettings);
 	
 	bool bHasSuccessfullyIssuedAsyncCreateSession = false;
 	if (
@@ -228,21 +233,26 @@ bool UMultiplayerSessionsSubsystem::TryAsyncCreateSession(const TMap<FName, FStr
 	return bHasSuccessfullyIssuedAsyncCreateSession;
 }
 
-void UMultiplayerSessionsSubsystem::SetupLastSessionSettings(const TMap<FName, FString>& ExtraSessionSettings)
+void UMultiplayerSessionsSubsystem::SetupLastSessionSettings(
+	const FMPSessionSettings& SessionSettings,
+	const TMap<FName, FString>& ExtraSessionSettings
+)
 {
-	// if we're using the NULL subsystem, we're in a LAN match
 	if (!LastSessionSettings.IsValid())
 	{
 		LastSessionSettings = MakeShareable(new FOnlineSessionSettings);
 	}
-	LastSessionSettings->bIsLANMatch =  IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
-	LastSessionSettings->bIsDedicated = false;
-	LastSessionSettings->NumPublicConnections = 4;
-	LastSessionSettings->bAllowJoinInProgress = true;
-	LastSessionSettings->bAllowJoinViaPresence = true;
-	LastSessionSettings->bShouldAdvertise = true;
-	LastSessionSettings->bUsesPresence = true;
-	LastSessionSettings->bUseLobbiesIfAvailable = false;
+	LastSessionSettings->bIsLANMatch = SessionSettings.bUseLAN;
+	LastSessionSettings->bIsDedicated = SessionSettings.bIsDedicatedServer;
+	LastSessionSettings->NumPublicConnections = SessionSettings.PublicConnections;
+	LastSessionSettings->bAllowJoinInProgress = SessionSettings.bAllowJoinInProgress;
+	LastSessionSettings->bAllowJoinViaPresence = SessionSettings.bAllowJoinViaPresence;
+	LastSessionSettings->bShouldAdvertise = SessionSettings.bShouldAdvertise;
+	LastSessionSettings->bUsesPresence = SessionSettings.bUsePresence;
+	LastSessionSettings->bUseLobbiesIfAvailable = SessionSettings.bUseLobbiesIfAvailable;
+	LastSessionSettings->bUseLobbiesVoiceChatIfAvailable = SessionSettings.bUseLobbiesIfAvailable;
+	LastSessionSettings->bAllowInvites = SessionSettings.bAllowInvites;
+	
 	 for (const auto& ExtraSessionSetting : ExtraSessionSettings)
 	 {
 	 	const FName SettingName = ExtraSessionSetting.Key;
@@ -577,7 +587,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections);
+		CreateSession(LastNumPublicConnections, FMPSessionSettings ());
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
