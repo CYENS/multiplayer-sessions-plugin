@@ -172,7 +172,7 @@ void UMenu::DisableJoinAndHostButtons()
 	JoinButton->SetIsEnabled(false);
 }
 
-void UMenu::OnCreateSessionComplete(bool bWasSuccessful)
+void UMenu::OnCreateSessionComplete(FName SessionName, FString SessionId, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{

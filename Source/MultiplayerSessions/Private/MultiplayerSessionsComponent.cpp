@@ -38,7 +38,7 @@ UMultiplayerSessionsSubsystem* UMultiplayerSessionsComponent::GetMultiplayerSess
     return nullptr;
 }
 
-void UMultiplayerSessionsComponent::HandleCreateSessionComplete(bool bWasSuccessful)
+void UMultiplayerSessionsComponent::HandleCreateSessionComplete(FName SessionName, FString SessionId, bool bWasSuccessful)
 {
     OnCreateSessionComplete.Broadcast(bWasSuccessful);
     OnCreateSession(bWasSuccessful);

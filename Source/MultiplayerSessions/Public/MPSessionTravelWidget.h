@@ -41,12 +41,15 @@ public:
 	void JoinSession(const FBPSessionResult& SearchResult);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Multiplayer Sessions")
+	void OnSessionCreated(const FName SessionName, const FString& SessionId, const bool bWasSuccessful);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Multiplayer Sessions")
 	void OnSessionsFound(const TArray<FBPSessionResult>& SearchResults, const bool bWasSuccessful);
 
 protected:
 	virtual void NativeDestruct() override;
 
-	void OnCreateSessionComplete(bool bWasSuccessful);
+	void OnCreateSessionComplete(FName SessionName, FString SessionId, bool bWasSuccessful);
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 	void OnJoinSessionComplete(const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnStartSessionComplete(bool bWasSuccessful);

@@ -152,7 +152,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 		if (!IsLoggedIn)
 		{
 			UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to issue session creation. Async Login failed and player not already logged in."));
-			MultiplayerOnCreateSessionComplete.Broadcast(false);
+			MultiplayerOnCreateSessionComplete.Broadcast(FName (), FString(), false);
 			return;	
 		}
 	}
@@ -161,7 +161,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 	if(!bHasSuccessfullyIssuedAsyncCreateSession)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("CreateSession failed to issue"));
-		MultiplayerOnCreateSessionComplete.Broadcast(false);
+		MultiplayerOnCreateSessionComplete.Broadcast(FName(), FString(), false);
 	}
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("CreateSession successfully issued"));
@@ -319,6 +319,7 @@ void UMultiplayerSessionsSubsystem::SetupLastSessionSearchOptions(const int32 Ma
 	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
 	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	LastSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 }
 
 bool UMultiplayerSessionsSubsystem::ExecutePendingLoginActions()
@@ -526,8 +527,9 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	const auto NamedSession = SessionInterface->GetNamedSession(SessionName);
 	UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("MultiplayerSessionSubsystem: Session ID %s"), *NamedSession->GetSessionIdStr());
 
+	const FString SessionId = NamedSession->GetSessionIdStr();
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
-	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
+	MultiplayerOnCreateSessionComplete.Broadcast(SessionName, SessionId, bWasSuccessful);
 }
 
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)

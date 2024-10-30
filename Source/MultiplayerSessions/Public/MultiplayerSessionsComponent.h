@@ -68,7 +68,7 @@ private:
 	UMultiplayerSessionsSubsystem* GetMultiplayerSessionsSubsystem() const;
 
 	// Event binding functions
-	void HandleCreateSessionComplete(bool bWasSuccessful);
+	void HandleCreateSessionComplete(const FName SessionName, FString SessionId, bool bWasSuccessful);
 	void HandleFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 	void HandleJoinSessionComplete(const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void HandleStartSessionComplete(bool bWasSuccessful);

@@ -37,7 +37,7 @@ protected:
 
 	// callbacks for the custom delegates on the MultiplayerSessionsSubsystem
 	UFUNCTION()
-	void OnCreateSessionComplete(bool bWasSuccessful);
+	void OnCreateSessionComplete(FName SessionName, FString SessionId, bool bWasSuccessful);
 	FString GetServerTravelLobbyMapPath() const;
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 	void OnJoinSessionComplete(const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);

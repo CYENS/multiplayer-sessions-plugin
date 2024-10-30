@@ -153,11 +153,13 @@ void UMPSessionTravelWidget::StartMultiplayerSession() const
 	}
 }
 
-void UMPSessionTravelWidget::OnCreateSessionComplete(bool bWasSuccessful)
+void UMPSessionTravelWidget::OnCreateSessionComplete(FName SessionName, FString SessionId, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Menu: Failed to create session"));
+		OnSessionCreated(SessionName, SessionId, bWasSuccessful);
+		return;
 	}
 	UE_LOG(LogMPSessionTravelWidget, Log, TEXT("Menu: Session Created successfully"));
 
@@ -165,8 +167,10 @@ void UMPSessionTravelWidget::OnCreateSessionComplete(bool bWasSuccessful)
 	if (World == nullptr)
 	{
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Menu: Failed to get World, cannot server travel to Lobby"));
+		OnSessionCreated(SessionName, SessionId, bWasSuccessful);
 		return;
 	}
+	OnSessionCreated(SessionName, SessionId, bWasSuccessful);
 	
 	const FString ServerTravelLobbyMapPath = GetServerTravelLobbyMapPath();
 	UE_LOG(LogMPSessionTravelWidget, Log, TEXT("Menu: ServerTravelLobbyMapPath set to: %s"), *ServerTravelLobbyMapPath);

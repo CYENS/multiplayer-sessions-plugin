@@ -17,7 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogMultiplayerSessionsSubsystem, Log, All);
  * Declaring our own custom delegates for the Menu class to bind callbacks to.
  */
 DECLARE_MULTICAST_DELEGATE_FourParams(FMultiplayerOnLoginComplete, int LocalUserNum, bool bWasSuccseful, const FUniqueNetId& UserId, const FString& Error);
-DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMultiplayerOnCreateSessionComplete, FName SessionName, FString SessionString, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, const FName& SessionName, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool bWasSuccessful);
