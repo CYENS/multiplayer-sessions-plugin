@@ -122,6 +122,29 @@ bool UMultiplayerSessionsSubsystem::TryAsyncLogin(const FPendingLoginAction& Pen
 	return true;
 }
 
+bool UMultiplayerSessionsSubsystem::Login(const FOnLoginCompletion& OnLoginComplete)
+{
+	OnLoginCompletion = OnLoginComplete;
+	return 	TryAsyncLogin(FPendingLoginAction::CreateLambda([] {}));
+}
+
+bool UMultiplayerSessionsSubsystem::Logout()
+{
+	IdentityInterface->Logout(0);
+	return true;
+}
+
+FUserInfo UMultiplayerSessionsSubsystem::GetAccountInfo() const
+{
+	const FUniqueNetIdPtr UserUniqueNetIdPtr = IdentityInterface->GetUniquePlayerId(0);
+	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*UserUniqueNetIdPtr);
+	return FUserInfo {
+		UserAccount->GetUserId()->ToString(),
+		UserAccount->GetDisplayName(),
+		UserAccount->GetRealName(),
+	};
+}
+
 void UMultiplayerSessionsSubsystem::CreateSession(
 	const int32 NumPublicConnections,
 	const FMPSessionSettings& SessionSettings,
@@ -509,6 +532,7 @@ void UMultiplayerSessionsSubsystem::OnLoginComplete(
 		IdentityInterface->ClearOnLoginCompleteDelegate_Handle(LocalUserNum, LoginCompleteDelegateHandle);
 		LoginCompleteDelegateHandle.Reset();
 	}
+	OnLoginCompletion.ExecuteIfBound(LocalUserNum, bWasSuccessful, UserId.ToString(), Error);
 }
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)

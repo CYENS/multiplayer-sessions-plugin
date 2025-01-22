@@ -23,6 +23,22 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, const FN
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool bWasSuccessful);
 DECLARE_DELEGATE(FPendingLoginAction) // Used to delegate function calls to be executed after login. Used for find, create, and joint session if user is not already Logged in
+DECLARE_DYNAMIC_DELEGATE_FourParams(FOnLoginCompletion, int32,  LocalUserNum, bool, bWasSuccessful, FString, UserId, FString, Error);
+
+USTRUCT(BlueprintType)
+struct FUserInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | UserInfo")
+	FString Id;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | UserInfo")
+	FString DisplayName;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | UserInfo")
+	FString RealName;
+};
 
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
@@ -32,6 +48,16 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 	bool TryAsyncLogin(const FPendingLoginAction& PendingLoginAction);
+
+	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	bool Login(const FOnLoginCompletion& OnLoginComplete);
+	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	bool Logout();
+	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	FUserInfo GetAccountInfo() const;
 
 	/**
 	 * To handle session functionality
@@ -120,4 +146,6 @@ private:
 	std::queue<FPendingLoginAction> PendingLoginActionsQueue;
 	bool ExecutePendingLoginActions();
 	void ClearPendingLoginActions();
+	
+	FOnLoginCompletion OnLoginCompletion;
 };
