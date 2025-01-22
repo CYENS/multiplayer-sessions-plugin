@@ -57,7 +57,7 @@ public:
 	bool Logout();
 	
 	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
-	FUserInfo GetAccountInfo() const;
+	FUserInfo GetUserInfo() const;
 
 	/**
 	 * To handle session functionality

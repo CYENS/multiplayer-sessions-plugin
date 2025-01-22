@@ -134,7 +134,7 @@ bool UMultiplayerSessionsSubsystem::Logout()
 	return true;
 }
 
-FUserInfo UMultiplayerSessionsSubsystem::GetAccountInfo() const
+FUserInfo UMultiplayerSessionsSubsystem::GetUserInfo() const
 {
 	const FUniqueNetIdPtr UserUniqueNetIdPtr = IdentityInterface->GetUniquePlayerId(0);
 	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*UserUniqueNetIdPtr);
