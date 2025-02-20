@@ -532,7 +532,10 @@ void UMultiplayerSessionsSubsystem::OnLoginComplete(
 		IdentityInterface->ClearOnLoginCompleteDelegate_Handle(LocalUserNum, LoginCompleteDelegateHandle);
 		LoginCompleteDelegateHandle.Reset();
 	}
-	OnLoginCompletion.ExecuteIfBound(LocalUserNum, bWasSuccessful, UserId.ToString(), Error);
+	
+	const FUniqueNetIdPtr UniqueId = IdentityInterface->GetUniquePlayerId(0);
+	const FString EosId = UniqueId->ToString();
+	OnLoginCompletion.ExecuteIfBound(LocalUserNum, bWasSuccessful, UserId.ToString(), Error, EosId);
 }
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)

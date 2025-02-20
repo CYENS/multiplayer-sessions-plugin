@@ -23,7 +23,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, const FN
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool bWasSuccessful);
 DECLARE_DELEGATE(FPendingLoginAction) // Used to delegate function calls to be executed after login. Used for find, create, and joint session if user is not already Logged in
-DECLARE_DYNAMIC_DELEGATE_FourParams(FOnLoginCompletion, int32,  LocalUserNum, bool, bWasSuccessful, FString, UserId, FString, Error);
+DECLARE_DYNAMIC_DELEGATE_FiveParams(FOnLoginCompletion, int32,  LocalUserNum, bool, bWasSuccessful, FString, UserId, FString, Error, FString, EosId);
 
 USTRUCT(BlueprintType)
 struct FUserInfo
@@ -40,7 +40,7 @@ struct FUserInfo
 	FString RealName;
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
