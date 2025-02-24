@@ -137,7 +137,17 @@ bool UMultiplayerSessionsSubsystem::Logout()
 FUserInfo UMultiplayerSessionsSubsystem::GetUserInfo() const
 {
 	const FUniqueNetIdPtr UserUniqueNetIdPtr = IdentityInterface->GetUniquePlayerId(0);
+	if (!UserUniqueNetIdPtr.IsValid())
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserUniqueNetIdPtr is invalid."));
+		return FUserInfo {};
+	}
 	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*UserUniqueNetIdPtr);
+	if (!UserAccount.IsValid())
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserAccount is invalid. Are you logged in?"));
+		return FUserInfo {};
+	}
 	return FUserInfo {
 		UserAccount->GetUserId()->ToString(),
 		UserAccount->GetDisplayName(),
