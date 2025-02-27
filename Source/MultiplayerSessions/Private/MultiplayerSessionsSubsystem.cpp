@@ -201,6 +201,11 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 	}
 }
 
+bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists()
+{
+	return DestroyPreviousSessionIfExists(LastNumPublicConnections);
+}
+
 /**
  * @return  True if a session was destroyed, false if no session was destroyed
  */
@@ -466,6 +471,7 @@ void UMultiplayerSessionsSubsystem::DestroySession()
 	if (!SessionInterface.IsValid())
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("During Destroy Session: SessionInterface is not valid"));
+		MultiplayerOnDestroySessionComplete.Broadcast(false);
 		return;
 	}
 
@@ -473,13 +479,14 @@ void UMultiplayerSessionsSubsystem::DestroySession()
 	
 	if(!SessionInterface->DestroySession(NAME_GameSession))
 	{
-		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to destroy session"));
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Session already destroyed"));
 		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
-		MultiplayerOnDestroySessionComplete.Broadcast(false);
+		MultiplayerOnDestroySessionComplete.Broadcast(true);
 	}
 	else
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("DestroySession issued successfully"));
+		MultiplayerOnDestroySessionComplete.Broadcast(true);
 	}
 }
 

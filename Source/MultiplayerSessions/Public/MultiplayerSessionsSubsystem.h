@@ -112,6 +112,7 @@ protected:
 		const TMap<FName, FString>& ExtraSessionSettings
 	);
 	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections);
+	bool DestroyPreviousSessionIfExists();
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
 
