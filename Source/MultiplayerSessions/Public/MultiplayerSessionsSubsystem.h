@@ -58,6 +58,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
 	FUserInfo GetUserInfo() const;
+	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
+	FString GetSessionId() const;
 
 	/**
 	 * To handle session functionality

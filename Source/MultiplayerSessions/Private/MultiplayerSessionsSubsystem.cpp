@@ -155,6 +155,23 @@ FUserInfo UMultiplayerSessionsSubsystem::GetUserInfo() const
 	};
 }
 
+FString UMultiplayerSessionsSubsystem::GetSessionId() const
+{
+	if (IsIdentityInterfaceInvalid())
+	{
+		return FString {};
+	}
+	const FNamedOnlineSession* NamedSession = SessionInterface->GetNamedSession(NAME_GameSession);
+	if (NamedSession == nullptr)
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Session not found. Was a session created?"));
+		return FString {};
+	}
+
+	const FString SessionId = NamedSession->GetSessionIdStr();
+	return SessionId;
+}
+
 void UMultiplayerSessionsSubsystem::CreateSession(
 	const int32 NumPublicConnections,
 	const FMPSessionSettings& SessionSettings,
