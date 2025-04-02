@@ -134,25 +134,77 @@ bool UMultiplayerSessionsSubsystem::Logout()
 	return true;
 }
 
-FUserInfo UMultiplayerSessionsSubsystem::GetUserInfo() const
+FUserInfo UMultiplayerSessionsSubsystem::GetUserInfo(EResultExecutionPins& Output)
 {
+	const FUserInfo EmptyUserInfo {};
+	if(!IdentityInterface.IsValid())
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("IdentityInterface is not valid"));
+		Output = EResultExecutionPins::Failure;
+		return EmptyUserInfo;
+	}
 	const FUniqueNetIdPtr UserUniqueNetIdPtr = IdentityInterface->GetUniquePlayerId(0);
 	if (!UserUniqueNetIdPtr.IsValid())
 	{
-		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserUniqueNetIdPtr is invalid."));
-		return FUserInfo {};
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserUniqueNetIdPtr is invalid. Are you logged in?"));
+		Output = EResultExecutionPins::Failure;
+		return EmptyUserInfo;
 	}
 	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*UserUniqueNetIdPtr);
 	if (!UserAccount.IsValid())
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserAccount is invalid. Are you logged in?"));
-		return FUserInfo {};
+		Output = EResultExecutionPins::Failure;
+		return EmptyUserInfo;
 	}
+	Output = EResultExecutionPins::Success;
 	return FUserInfo {
 		UserAccount->GetUserId()->ToString(),
 		UserAccount->GetDisplayName(),
 		UserAccount->GetRealName(),
 	};
+}
+
+FSessionInfo UMultiplayerSessionsSubsystem::GetSessionInfo(EResultExecutionPins& Output)
+{
+	const FSessionInfo EmptySessionInfo {};
+	if(!SessionInterface.IsValid())
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("SessionInterface is not valid"));
+		Output = EResultExecutionPins::Failure;
+		return EmptySessionInfo;
+	}
+	const FNamedOnlineSession* NamedSession = SessionInterface->GetNamedSession(NAME_GameSession);
+	if (NamedSession == nullptr)
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("NamedSession is null. Was Session Created?"));
+		Output = EResultExecutionPins::Failure;
+		return EmptySessionInfo;
+	}
+	Output = EResultExecutionPins::Success;
+	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*NamedSession->OwningUserId);
+	const FUserInfo Owner = {
+		UserAccount->GetUserId()->ToString(),
+		UserAccount->GetDisplayName(),
+		UserAccount->GetRealName()
+	};
+	TArray<FUserInfo> RegisteredPlayers;
+	for (const auto RegisteredPlayerUniqueNetId : NamedSession->RegisteredPlayers)
+	{
+		const auto RegisteredUserAccount = IdentityInterface->GetUserAccount(*RegisteredPlayerUniqueNetId);
+		const FUserInfo RegisteredUser = {
+			RegisteredPlayerUniqueNetId->ToString(),
+			RegisteredUserAccount->GetDisplayName(),
+			RegisteredUserAccount->GetRealName()
+		};
+	}
+	const FSessionInfo SessionInfo = {
+		NamedSession->GetSessionIdStr(),
+		NamedSession->SessionName,
+		NamedSession->bIsLocalPlayerHosting,
+		Owner,
+	};
+	return SessionInfo;
 }
 
 FString UMultiplayerSessionsSubsystem::GetSessionId() const

@@ -25,6 +25,14 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool b
 DECLARE_DELEGATE(FPendingLoginAction) // Used to delegate function calls to be executed after login. Used for find, create, and joint session if user is not already Logged in
 DECLARE_DYNAMIC_DELEGATE_FiveParams(FOnLoginCompletion, int32,  LocalUserNum, bool, bWasSuccessful, FString, UserId, FString, Error, FString, EosId);
 
+UENUM(BlueprintType)
+enum class EResultExecutionPins : uint8
+{
+	Success     UMETA(DisplayName = "Success"),
+	Failure     UMETA(DisplayName = "Failure")
+};
+
+
 USTRUCT(BlueprintType)
 struct FUserInfo
 {
@@ -38,6 +46,24 @@ struct FUserInfo
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | UserInfo")
 	FString RealName;
+};
+
+USTRUCT(BlueprintType)
+struct FSessionInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
+	FString Id;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
+	FName Name;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
+	bool bHosting;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
+	FUserInfo Owner;
 };
 
 UCLASS(BlueprintType)
@@ -56,9 +82,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
 	bool Logout();
 	
-	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
-	FUserInfo GetUserInfo() const;
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions", meta = (ExpandEnumAsExecs = "Output"))
+	FUserInfo GetUserInfo(EResultExecutionPins& Output);
 	
+	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions", meta = (ExpandEnumAsExecs = "Output"))
+	FSessionInfo GetSessionInfo(EResultExecutionPins& Output);
+
 	UFUNCTION(BlueprintCallable, Category="MultiplayerSessions")
 	FString GetSessionId() const;
 
