@@ -198,10 +198,11 @@ FSessionInfo UMultiplayerSessionsSubsystem::GetSessionInfo(EResultExecutionPins&
 			RegisteredUserAccount->GetRealName()
 		};
 	}
+	
 	const FSessionInfo SessionInfo = {
 		NamedSession->GetSessionIdStr(),
 		NamedSession->SessionName,
-		NamedSession->bIsLocalPlayerHosting,
+		NamedSession->bHosting,
 		Owner,
 	};
 	return SessionInfo;
