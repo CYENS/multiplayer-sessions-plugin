@@ -181,29 +181,54 @@ FSessionInfo UMultiplayerSessionsSubsystem::GetSessionInfo(EResultExecutionPins&
 		Output = EResultExecutionPins::Failure;
 		return EmptySessionInfo;
 	}
-	Output = EResultExecutionPins::Success;
-	const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*NamedSession->OwningUserId);
-	const FUserInfo Owner = {
-		UserAccount->GetUserId()->ToString(),
-		UserAccount->GetDisplayName(),
-		UserAccount->GetRealName()
-	};
-	TArray<FUserInfo> RegisteredPlayers;
-	for (const auto RegisteredPlayerUniqueNetId : NamedSession->RegisteredPlayers)
+	if (!IdentityInterface.IsValid())
 	{
-		const auto RegisteredUserAccount = IdentityInterface->GetUserAccount(*RegisteredPlayerUniqueNetId);
-		const FUserInfo RegisteredUser = {
-			RegisteredPlayerUniqueNetId->ToString(),
-			RegisteredUserAccount->GetDisplayName(),
-			RegisteredUserAccount->GetRealName()
-		};
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("IdentityInterface is null"));
+		Output = EResultExecutionPins::Failure;
+		return EmptySessionInfo;
 	}
+	// return EmptySessionInfo;
+	// if (!NamedSession->OwningUserId->IsValid())
+	// {
+	// 	UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("OwningUserId is null. Was Session Created?"));
+	// 	Output = EResultExecutionPins::Failure;
+	// 	return EmptySessionInfo;
+	// }
+	// UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("%s"), *NamedSession->SessionName.ToString());
+	// UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("%s"), *NamedSession->OwningUserId->ToString());
+	// const TSharedPtr<FUserOnlineAccount> UserAccount = IdentityInterface->GetUserAccount(*NamedSession->OwningUserId);
+	// if (!UserAccount.IsValid())
+	// {
+		// UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("UserAccount is null. Was Session Created?"));
+		// Output = EResultExecutionPins::Failure;
+		// return EmptySessionInfo;
+		
+	// }
+	// const FUserInfo Owner = {
+		// UserAccount->GetUserId()->ToString(),
+		// UserAccount->GetDisplayName(),
+		// UserAccount->GetRealName()
+	// };
+	// TArray<FUserInfo> RegisteredPlayers;
+	// for (const auto RegisteredPlayerUniqueNetId : NamedSession->RegisteredPlayers)
+	// {
+		// const TSharedPtr<FUserOnlineAccount> RegisteredUserAccount = IdentityInterface->GetUserAccount(*RegisteredPlayerUniqueNetId);
+		// if (!RegisteredUserAccount.IsValid())
+		// {
+			// continue;
+		// }
+		// const FUserInfo RegisteredUser = {
+			// RegisteredPlayerUniqueNetId->ToString(),
+			// RegisteredUserAccount->GetDisplayName(),
+			// RegisteredUserAccount->GetRealName()
+		// };
+	// }
 	
 	const FSessionInfo SessionInfo = {
 		NamedSession->GetSessionIdStr(),
 		NamedSession->SessionName,
 		NamedSession->bHosting,
-		Owner,
+		// Owner,
 	};
 	return SessionInfo;
 }

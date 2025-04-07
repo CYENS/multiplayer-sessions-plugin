@@ -62,8 +62,8 @@ struct FSessionInfo
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
 	bool bHosting;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
-	FUserInfo Owner;
+	// UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MultiplayerSessions | SessionInfo")
+	// FUserInfo Owner;
 };
 
 UCLASS(BlueprintType)
