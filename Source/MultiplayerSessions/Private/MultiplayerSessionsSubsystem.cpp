@@ -52,6 +52,9 @@ bool UMultiplayerSessionsSubsystem::TryAsyncLogin(const FPendingLoginAction& Pen
 		UE_LOG(LogMultiplayerSessionsSubsystem, Warning, TEXT("Login failed. IdentityInterface is invalid."));
 		return false;
 	}
+
+	// These actions will be executed on successful Login
+	PendingLoginActionsQueue.push(PendingLoginAction);
     
     if(const FUniqueNetIdPtr NetId = IdentityInterface->GetUniquePlayerId(0))
     {
@@ -59,20 +62,18 @@ bool UMultiplayerSessionsSubsystem::TryAsyncLogin(const FPendingLoginAction& Pen
 		{
 			UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Player already Logged In."));
 			IsLoggedIn = true;
-			// if(PendingLoginAction.ExecuteIfBound())
-			// {
-			// 	UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Post-login action executed"));
-			// }
-			return false; 
+			
+			constexpr int32 LocalUserNum = 0;
+			constexpr bool bWasSuccessful = true;
+			ExecutePendingLoginActions();
+			LoginCompleteDelegate.ExecuteIfBound(LocalUserNum, bWasSuccessful, *NetId.Get(), TEXT("User Already Logged in"));
+			return true;
 		}
     }
     else
     {
     	UE_LOG(LogMultiplayerSessionsSubsystem, Warning, TEXT("Could not retrieve Logged In status. NetId is null."));
     }
-	// These actions will be executed on successful Login
-	PendingLoginActionsQueue.push(PendingLoginAction);
-	
     
     /* This binds a delegate so we can run our function when the callback completes. 0 represents the player number.
     You should parametrize this Login function and pass the parameter here for splitscreen. 
