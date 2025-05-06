@@ -715,9 +715,11 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (!bWasSuccessful)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to Destroy Session %s"), *SessionName.ToString());
-		return;
 	}
-	UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Successfuly destroyed Session %s"), *SessionName.ToString());
+	else
+	{
+		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("Successfully destroyed Session %s"), *SessionName.ToString());
+	}
 	
 	if (!SessionInterface.IsValid())
 	{
@@ -726,9 +728,14 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	}
 
 	SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
-	if (bWasSuccessful && bCreateSessionOnDestroy)
+	if (bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
+		if (!bWasSuccessful)
+		{
+			UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to Destroy Session %s. Attempting to create new session despite that"), *SessionName.ToString());
+		}
+		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Attempting to create new session."));
 		CreateSession(LastNumPublicConnections, FMPSessionSettings ());
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
