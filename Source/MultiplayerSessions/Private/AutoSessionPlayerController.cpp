@@ -4,8 +4,14 @@
 #include "Engine/Engine.h"
 #include "Online/OnlineSessionNames.h"
 
-static const FName SETTING_SESSION_KEY(TEXT("SESSION_KEY"));
-static const FName DEFAULT_SESSION_NAME(NAME_GameSession);
+static const FName GSettingSessionKey(TEXT("SESSION_KEY"));
+static const FName GDefaultSessionName(NAME_GameSession);
+
+AAutoSessionPlayerController::AAutoSessionPlayerController(const FObjectInitializer& ObjectInitializer):
+	Super(ObjectInitializer),
+	SessionKey(TEXT("DEFAULT_KEY"))
+{
+}
 
 void AAutoSessionPlayerController::BeginPlay()
 {
@@ -72,8 +78,10 @@ void AAutoSessionPlayerController::HandleLoginComplete(int32 LocalUserNum, bool 
 void AAutoSessionPlayerController::StartAfterLogin()
 {
 	// Optional: allow -SessionKey=XYZ on the command line
-	FString CmdKey;
-	if (FParse::Value(FCommandLine::Get(), TEXT("SessionKey="), CmdKey))
+	if (
+		FString CmdKey;
+		FParse::Value(FCommandLine::Get(), TEXT("SessionKey="), CmdKey)
+	)
 	{
 		SessionKey = CmdKey;
 	}
@@ -91,7 +99,7 @@ void AAutoSessionPlayerController::FindSessions()
 	SessionSearch->MaxSearchResults = 100;
 	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-	SessionSearch->QuerySettings.Set(SETTING_SESSION_KEY, SessionKey, EOnlineComparisonOp::Equals);
+	SessionSearch->QuerySettings.Set(GSettingSessionKey, SessionKey, EOnlineComparisonOp::Equals);
 	
 	OnFindSessionsCompleteHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
 		FOnFindSessionsCompleteDelegate::CreateUObject(this, &AAutoSessionPlayerController::HandleFindSessionsComplete)
@@ -113,7 +121,7 @@ void AAutoSessionPlayerController::HandleFindSessionsComplete(bool bWasSuccessfu
 		for (const FOnlineSessionSearchResult& Result : SessionSearch->SearchResults)
 		{
 			if (FString FoundKey;
-				Result.Session.SessionSettings.Get(SETTING_SESSION_KEY, FoundKey) && FoundKey == SessionKey
+				Result.Session.SessionSettings.Get(GSettingSessionKey, FoundKey) && FoundKey == SessionKey
 			)
 			{
 				JoinFoundSession(Result);
@@ -132,9 +140,9 @@ void AAutoSessionPlayerController::CreateSession()
 		return;
 
 	// Clean up old session (PIE convenience)
-	if (SessionInterface->GetNamedSession(DEFAULT_SESSION_NAME))
+	if (SessionInterface->GetNamedSession(GDefaultSessionName))
 	{
-		SessionInterface->DestroySession(DEFAULT_SESSION_NAME);
+		SessionInterface->DestroySession(GDefaultSessionName);
 	}
 
 	FOnlineSessionSettings Settings;
@@ -157,12 +165,12 @@ void AAutoSessionPlayerController::CreateSession()
 	Settings.bUsesStats                          = false;
 
 	Settings.Set(SEARCH_PRESENCE, true, EOnlineDataAdvertisementType::ViaOnlineService);
-	Settings.Set(SETTING_SESSION_KEY, SessionKey, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	Settings.Set(GSettingSessionKey, SessionKey, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	OnCreateSessionCompleteHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(FOnCreateSessionCompleteDelegate::CreateUObject(this, &AAutoSessionPlayerController::HandleCreateSessionComplete));
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), DEFAULT_SESSION_NAME, Settings);
+	SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), GDefaultSessionName, Settings);
 }
 
 void AAutoSessionPlayerController::HandleCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -208,7 +216,7 @@ void AAutoSessionPlayerController::JoinFoundSession(const FOnlineSessionSearchRe
 	);
 
 	const ULocalPlayer* LocalPlayer = GetLocalPlayer();
-	SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), DEFAULT_SESSION_NAME, Result);
+	SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), GDefaultSessionName, Result);
 }
 
 void AAutoSessionPlayerController::HandleJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)

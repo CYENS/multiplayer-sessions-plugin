@@ -10,11 +10,12 @@ UCLASS()
 class MULTIPLAYERSESSIONS_API AAutoSessionPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+	AAutoSessionPlayerController(const FObjectInitializer& ObjectInitializer);
 
 public:
 	// Players using the same key will meet in the same session (e.g., "EU-DUOS-42")
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AutoSession")
-	FString SessionKey = TEXT("DEFAULT_KEY");
+	FString SessionKey;
 
 	// Map the host opens after the session is created (must be included in packaging)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AutoSession")
