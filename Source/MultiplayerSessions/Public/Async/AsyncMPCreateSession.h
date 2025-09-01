@@ -18,7 +18,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MultiplayerSessions | Async ", meta = (WorldContext = "WorldContextObject", BlueprintInternalUseOnly =  "true"))
 	static UAsyncMPCreateSession* AsyncCreateSession(
 		UObject* WorldContextObject,
-		const FMPSessionSettings& SessionSettings
+		const FMPSessionSettings& SessionSettings,
+		const TMap<FName, FString>& ExtraSessionSettings
 	);
 	
 	UPROPERTY(BlueprintAssignable)
@@ -44,6 +45,8 @@ protected:
 	
 private:
 	FMPSessionSettings SessionSettings;
+	
+	TMap<FName, FString> ExtraSessionSettings;
 	
 	UPROPERTY();
 	UObject* WorldContextObject;

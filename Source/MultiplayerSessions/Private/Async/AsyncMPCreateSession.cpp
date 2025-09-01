@@ -6,12 +6,14 @@
 
 UAsyncMPCreateSession* UAsyncMPCreateSession::AsyncCreateSession(
 	UObject* WorldContextObject,
-	const FMPSessionSettings& SessionSettings
+	const FMPSessionSettings& SessionSettings,
+	const TMap<FName, FString>& ExtraSessionSettings
 )
 {
 	UAsyncMPCreateSession* AsyncNode = NewObject<UAsyncMPCreateSession>();
 	AsyncNode->WorldContextObject = WorldContextObject;
 	AsyncNode->SessionSettings = SessionSettings;
+	AsyncNode->ExtraSessionSettings = ExtraSessionSettings;
 	return AsyncNode;
 }
 
@@ -32,7 +34,7 @@ void UAsyncMPCreateSession::Activate()
 
 	
 	HandleSuccessDelegateHandle = MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddUObject(this, &ThisClass::HandleSuccess);
-	MultiplayerSessionsSubsystem->CreateSession(4, SessionSettings);
+	MultiplayerSessionsSubsystem->CreateSession(4, SessionSettings, ExtraSessionSettings);
 }
 
 
