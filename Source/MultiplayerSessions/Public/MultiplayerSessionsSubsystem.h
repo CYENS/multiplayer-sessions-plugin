@@ -92,11 +92,10 @@ public:
 	FString GetSessionId() const;
 
 	/**
-	 * To handle session functionality
+	 * To handle session functionality.
 	 * The Menu class will call these.
 	 */
 	void CreateSession(
-		const int32 NumPublicConnections,
 		const FMPSessionSettings& SessionSettings,
 		const TMap<FName, FString>& ExtraSessionSettings = TMap<FName, FString> ()
 	);
@@ -143,7 +142,6 @@ protected:
 		const FMPSessionSettings& SessionSettings,
 		const TMap<FName, FString>& ExtraSessionSettings
 	);
-	bool DestroyPreviousSessionIfExists(const int32 NumPublicConnections);
 	bool DestroyPreviousSessionIfExists();
 	bool TryAsyncFindSessions(int32 MaxSearchResults);
 	void SetupLastSessionSearchOptions(int32 MaxSearchResults);
@@ -172,7 +170,6 @@ private:
 	FDelegateHandle StartSessionCompleteDelegateHandle;
 
 	bool bCreateSessionOnDestroy { false };
-	int32 LastNumPublicConnections { 4 };
 	bool IsLoggedIn;
 	
 private:

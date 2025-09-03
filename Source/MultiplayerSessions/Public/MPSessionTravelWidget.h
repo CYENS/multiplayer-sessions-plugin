@@ -21,9 +21,7 @@ class MULTIPLAYERSESSIONS_API UMPSessionTravelWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(
-		const int32 NumberPublicConnections = 4
-	);
+	void MenuSetup();
 
 	TSoftObjectPtr<UWorld> LobbyMapAsset;
 	TSoftObjectPtr<UWorld> SessionMapAsset;
@@ -70,6 +68,4 @@ private:
 	void StartMultiplayerSession() const;
 
 	void MenuTeardown();
-
-	int32 NumPublicConnections { 4 };
 };

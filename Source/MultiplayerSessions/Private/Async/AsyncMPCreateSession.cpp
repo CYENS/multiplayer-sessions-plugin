@@ -34,7 +34,7 @@ void UAsyncMPCreateSession::Activate()
 
 	
 	HandleSuccessDelegateHandle = MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddUObject(this, &ThisClass::HandleSuccess);
-	MultiplayerSessionsSubsystem->CreateSession(4, SessionSettings, ExtraSessionSettings);
+	MultiplayerSessionsSubsystem->CreateSession(SessionSettings, ExtraSessionSettings);
 }
 
 

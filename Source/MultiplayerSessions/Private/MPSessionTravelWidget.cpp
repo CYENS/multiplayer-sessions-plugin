@@ -11,12 +11,8 @@
 DEFINE_LOG_CATEGORY(LogMPSessionTravelWidget);
 
 
-void UMPSessionTravelWidget::MenuSetup(
-	const int32 NumberPublicConnections
-)
+void UMPSessionTravelWidget::MenuSetup()
 {
-	NumPublicConnections = NumberPublicConnections;
-	
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
 	SetIsFocusable(true);
@@ -50,7 +46,7 @@ void UMPSessionTravelWidget::CreateSession(
 		UE_LOG(LogMPSessionTravelWidget, Error, TEXT("Failed to issue CreateSession, MultiplayerSessionsSubsystem is null"));
 		return;
 	}
-	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, SessionSettings, ExtraSessionSettings);
+	MultiplayerSessionsSubsystem->CreateSession(SessionSettings, ExtraSessionSettings);
 }
 
 void UMPSessionTravelWidget::FindSessions(const int32 MaxSearchResults) const 

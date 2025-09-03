@@ -252,21 +252,20 @@ FString UMultiplayerSessionsSubsystem::GetSessionId() const
 }
 
 void UMultiplayerSessionsSubsystem::CreateSession(
-	const int32 NumPublicConnections,
 	const FMPSessionSettings& SessionSettings,
 	const TMap<FName, FString>& ExtraSessionSettings
 )
 {
 	// if a session already exists, destroy it first, and return early, then it will be created on the OnDestroySessionComplete callback
-	if (DestroyPreviousSessionIfExists(NumPublicConnections)) return;
+	if (DestroyPreviousSessionIfExists()) return;
 	if (!IsLoggedIn)
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Log, TEXT("User not logged in. Attempting to log in."));
 		const bool bHasIssuedAsyncLogin =  
 			TryAsyncLogin(FPendingLoginAction::CreateLambda(
-				[this, NumPublicConnections, SessionSettings, ExtraSessionSettings]()
+				[this, SessionSettings, ExtraSessionSettings]()
 					{
-					CreateSession(NumPublicConnections, SessionSettings, ExtraSessionSettings);
+					CreateSession(SessionSettings, ExtraSessionSettings);
 					}
 				)
 			);
@@ -297,15 +296,11 @@ void UMultiplayerSessionsSubsystem::CreateSession(
 	}
 }
 
-bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists()
-{
-	return DestroyPreviousSessionIfExists(LastNumPublicConnections);
-}
 
 /**
  * @return  True if a session was destroyed, false if no session was destroyed
  */
-bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 NumPublicConnections)
+bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists()
 {
 	if (IsSessionInterfaceInvalid()) return false;
 	
@@ -316,7 +311,6 @@ bool UMultiplayerSessionsSubsystem::DestroyPreviousSessionIfExists(const int32 N
 	{
 		UE_LOG(LogMultiplayerSessionsSubsystem, Warning, TEXT("Session already exists"));
 		bCreateSessionOnDestroy = true;
-		LastNumPublicConnections = NumPublicConnections;
 		DestroySession();
 		return true;
 	}
@@ -736,7 +730,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 			UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Failed to Destroy Session %s. Attempting to create new session despite that"), *SessionName.ToString());
 		}
 		UE_LOG(LogMultiplayerSessionsSubsystem, Error, TEXT("Attempting to create new session."));
-		CreateSession(LastNumPublicConnections, FMPSessionSettings ());
+		CreateSession(FMPSessionSettings ());
 	}
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
